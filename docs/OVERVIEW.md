@@ -18,6 +18,7 @@ domain-generators/
 │   ├── overview.md
 │   ├── markov.md
 │   ├── brute.md
+│   ├── word_transform.md
 │   └── roadmap.md
 │
 ├── /assets/
@@ -38,6 +39,7 @@ domain-generators/
 │   │   ├── __init__.py
 │   │   ├── markov_generator.py     # Markov-based name generation
 │   │   ├── brute_generator.py      # All combinations of given charset
+│   │   ├── word_transform_generator.py  # Transform words to domains
 │   │   ├── pattern_generator.py    # Generate via regex-like patterns
 │   │   └── random_generator.py     # Pure random combinations
 │   │
@@ -101,7 +103,23 @@ python3 src/main.py markov --order 3 --count 10000
 
 ---
 
-### **4. Optional Extras**
+### **4. Word Transform Generator**
+
+* Read words from a text file (one word per line)
+* Clean non-alphanumeric characters except hyphens
+* Normalize Lithuanian characters to Latin equivalents
+* Append .lt TLD to form domains
+* Save to `/assets/output/word_transform_*.txt`
+
+Example usage:
+
+```bash
+python3 src/main.py word_transform --input assets/input/words.txt --output assets/output/transformed_domains.txt
+```
+
+---
+
+### **5. Optional Extras**
 
 * **pattern_generator.py** → Define regex-like patterns (`[a-z]{2}[0-9]{1}` etc.)
 * **random_generator.py** → Random combinations with weighted letter frequencies.
@@ -109,11 +127,12 @@ python3 src/main.py markov --order 3 --count 10000
 
 ---
 
-### **5. Documentation**
+### **6. Documentation**
 
 * `/docs/overview.md` → explains the idea
 * `/docs/markov.md` → how Markov chains are used and trained
 * `/docs/brute.md` → how brute generation works
+* `/docs/word_transform.md` → how word transformation works
 * `/docs/roadmap.md` → ideas like `AI-based generator`, `semantic-word generator`, etc.
 
 ---

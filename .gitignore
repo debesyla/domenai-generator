@@ -67,3 +67,7 @@ Thumbs.db
 # Output
 assets/output/*
 !assets/output/.gitkeep
+
+# Input
+assets/input/*
+!assets/input/.gitkeep

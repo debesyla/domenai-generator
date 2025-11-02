@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from generators.brute_generator import BruteForceGenerator
+from generators.word_transform_generator import WordTransformGenerator
 
 
 def create_parser():
@@ -24,6 +25,12 @@ def create_parser():
 Examples:
   # Generate 2-4 character domains with default settings
   python main.py brute
+
+  # Transform words from file to .lt domains
+  python main.py word_transform --input assets/input/words.txt
+
+  # Transform words to .com domains with custom output
+  python main.py word_transform --input words.txt --tld com --output domains.txt
 
   # Generate 3-character domains only
   python main.py brute --length 3
@@ -85,6 +92,28 @@ Examples:
         help='Only estimate count, do not generate'
     )
 
+    # Word transform generator
+    word_parser = subparsers.add_parser('word_transform', help='Transform words from file to domains')
+    word_parser.add_argument(
+        '--input', '-i',
+        required=True,
+        help='Input file path (one word per line)'
+    )
+    word_parser.add_argument(
+        '--output', '-o',
+        help='Output file path (default: auto-generated)'
+    )
+    word_parser.add_argument(
+        '--tld',
+        default='lt',
+        help='Top-level domain to append (default: lt)'
+    )
+    word_parser.add_argument(
+        '--estimate-only', '-e',
+        action='store_true',
+        help='Only estimate count, do not generate'
+    )
+
     return parser
 
 
@@ -137,6 +166,46 @@ def generate_brute_force(args):
         return 1
 
 
+def generate_word_transform(args):
+    """Handle word transform generation."""
+    try:
+        generator = WordTransformGenerator(
+            input_file=args.input,
+            tld=args.tld
+        )
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    # Estimate count
+    estimated = generator.estimate_count()
+    print(f"Estimated domains to generate: {estimated:,}")
+
+    if args.estimate_only:
+        return 0
+
+    # Generate output filename if not provided
+    if not args.output:
+        input_name = Path(args.input).stem
+        output_file = f"assets/output/word_transform_{input_name}_{args.tld}.txt"
+    else:
+        output_file = args.output
+
+    # Ensure output directory exists
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Generating domains to: {output_file}")
+
+    try:
+        count = generator.generate_to_file(str(output_path))
+        print(f"Successfully generated {count:,} domains")
+        return 0
+    except Exception as e:
+        print(f"Error during generation: {e}", file=sys.stderr)
+        return 1
+
+
 def main():
     """Main entry point."""
     parser = create_parser()
@@ -148,6 +217,8 @@ def main():
 
     if args.generator == 'brute':
         return generate_brute_force(args)
+    elif args.generator == 'word_transform':
+        return generate_word_transform(args)
     else:
         print(f"Generator '{args.generator}' not implemented yet", file=sys.stderr)
         return 1
