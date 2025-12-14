@@ -93,19 +93,45 @@ class BruteForceGenerator:
         Returns:
             Estimated count of domains that will be generated
         """
-        charset_size = len(self.charset)
         total = 0
+        base_chars = self.CHARACTER_SETS[self.char_type]
+        base_n = len(base_chars)
 
-        for length in range(self.min_len, self.max_len + 1):
-            total += charset_size ** length
-
-        # Apply rough validation filter based on hyphen mode
-        if self.hyphen_mode == 'with':
-            # Account for domains that start/end with hyphens or have consecutive hyphens
-            total = int(total * 0.90)
-        elif self.hyphen_mode == 'only':
-            # Only ~30% will have hyphens after filtering invalid positions
-            total = int(total * 0.30)
+        for L in range(self.min_len, self.max_len + 1):
+            if self.hyphen_mode == 'without':
+                # No hyphens allowed: all positions from base chars
+                total += base_n ** L
+            elif self.hyphen_mode == 'with':
+                # Hyphens allowed but must not start/end or be consecutive.
+                # Count sequences over alphabet A = base_chars ∪ {'-'} with constraints.
+                # DP over last_char_is_hyphen state.
+                if L == 0:
+                    continue
+                # First char: cannot be hyphen
+                dp_h = 0  # ending with hyphen
+                dp_nh = base_n  # ending with non-hyphen
+                for _ in range(2, L + 1):
+                    new_dp_h = dp_nh  # can place '-' only after non-hyphen
+                    new_dp_nh = dp_h * base_n + dp_nh * base_n  # place non-hyphen after any
+                    dp_h, dp_nh = new_dp_h, new_dp_nh
+                # Last char cannot be hyphen: subtract sequences ending with hyphen
+                total += dp_nh
+            else:  # 'only' — requires at least one hyphen and obey constraints
+                if L < 2:
+                    # cannot satisfy start/end and consecutive rules with at least one hyphen
+                    continue
+                # Count valid sequences with constraints (as above) then subtract sequences with no hyphen.
+                # Valid with constraints (hyphen allowed, not start/end, no consecutive)
+                dp_h = 0
+                dp_nh = base_n
+                for _ in range(2, L + 1):
+                    new_dp_h = dp_nh
+                    new_dp_nh = dp_h * base_n + dp_nh * base_n
+                    dp_h, dp_nh = new_dp_h, new_dp_nh
+                valid_total = dp_nh  # last char must be non-hyphen
+                no_hyphen_total = base_n ** L  # sequences with no hyphen at all
+                must_have_hyphen = max(valid_total - no_hyphen_total, 0)
+                total += must_have_hyphen
 
         return total
 

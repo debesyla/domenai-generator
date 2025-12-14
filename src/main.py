@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from generators.brute_generator import BruteForceGenerator
 from generators.word_transform_generator import WordTransformGenerator
 from cleanup import clean_file, remove_domains
+from utils.io_utils import make_output_path
 
 
 def create_parser():
@@ -187,7 +188,8 @@ def generate_brute_force(args):
 
     # Generate output filename if not provided
     if not args.output:
-        output_file = f"assets/output/brute_{args.charset}_{args.min}-{args.max}_{args.hyphen_mode}_{args.tld}.txt"
+        rng = f"{args.min}-{args.max}"
+        output_file = make_output_path('brute', charset=args.charset, rng=rng, hyphen=args.hyphen_mode, tld=args.tld)
     else:
         output_file = args.output
 
@@ -230,7 +232,7 @@ def generate_word_transform(args):
     # Generate output filename if not provided
     if not args.output:
         input_name = Path(args.input).stem
-        output_file = f"assets/output/word_transform_{input_name}_{args.tld}.txt"
+        output_file = make_output_path('word_transform', input=input_name, tld=args.tld)
     else:
         output_file = args.output
 
