@@ -11,6 +11,7 @@ from pathlib import Path
 
 from brute_generator import BruteForceGenerator
 from word_transform_generator import WordTransformGenerator
+from markov_generator import MarkovGenerator
 from cleanup import clean_file, remove_domains
 from io_utils import make_output_path
 
@@ -127,6 +128,58 @@ def create_parser():
         '--estimate-only', '-e',
         action='store_true',
         help='Only estimate count, do not generate'
+    )
+
+    # Markov generator
+    markov_parser = subparsers.add_parser('markov', help='Markov chain-based domain generation from corpus')
+    markov_parser.add_argument(
+        '--input', '-i',
+        required=True,
+        help='Input corpus file (one domain/word per line)'
+    )
+    markov_parser.add_argument(
+        '--output', '-o',
+        help='Output file path (default: auto-generated)'
+    )
+    markov_parser.add_argument(
+        '--order', '-n',
+        type=int,
+        default=3,
+        help='N-gram order (default: 3 for trigrams)'
+    )
+    markov_parser.add_argument(
+        '--min', '-m',
+        type=int,
+        default=2,
+        help='Minimum generated length (default: 2)'
+    )
+    markov_parser.add_argument(
+        '--max', '-M',
+        type=int,
+        default=8,
+        help='Maximum generated length (default: 8)'
+    )
+    markov_parser.add_argument(
+        '--count', '-c',
+        type=int,
+        default=10000,
+        help='Number of domains to generate (default: 10000)'
+    )
+    markov_parser.add_argument(
+        '--tld',
+        default='lt',
+        help='Top-level domain to append (default: lt)'
+    )
+    markov_parser.add_argument(
+        '--min-frequency',
+        type=int,
+        default=2,
+        help='Minimum n-gram frequency threshold (default: 2)'
+    )
+    markov_parser.add_argument(
+        '--estimate-only', '-e',
+        action='store_true',
+        help='Only show configuration, do not generate'
     )
 
     return parser
@@ -263,6 +316,58 @@ def run_cleanup(args):
     return 0
 
 
+def generate_markov(args):
+    """Handle Markov chain generation."""
+    try:
+        generator = MarkovGenerator(
+            input_file=args.input,
+            order=args.order,
+            min_len=args.min,
+            max_len=args.max,
+            count=args.count,
+            tld=args.tld,
+            min_frequency=args.min_frequency
+        )
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    # Show configuration
+    estimated = generator.estimate_count()
+    print(f"Target domains to generate: {estimated:,}")
+
+    if args.estimate_only:
+        return 0
+
+    # Generate output filename if not provided
+    if not args.output:
+        input_name = Path(args.input).stem
+        output_file = make_output_path(
+            'markov',
+            input=input_name,
+            order=f'n{args.order}',
+            rng=f'{args.min}-{args.max}',
+            count=f'{args.count}',
+            tld=args.tld
+        )
+    else:
+        output_file = args.output
+
+    # Ensure output directory exists
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Generating domains to: {output_file}")
+
+    try:
+        count = generator.generate_to_file(str(output_path))
+        print(f"Successfully generated {count:,} domains")
+        return 0
+    except Exception as e:
+        print(f"Error during generation: {e}", file=sys.stderr)
+        return 1
+
+
 def main():
     """Main entry point."""
     parser = create_parser()
@@ -276,6 +381,8 @@ def main():
         return generate_brute_force(args)
     elif args.generator == 'word_transform':
         return generate_word_transform(args)
+    elif args.generator == 'markov':
+        return generate_markov(args)
     elif args.generator == 'cleanup':
         return run_cleanup(args)
     else:
