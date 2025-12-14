@@ -1,8 +1,8 @@
 # Dago Domenai Generator Requirements
 # Core dependencies for domain name generation toolkit
 
-# No external dependencies required for core functionality
-# All generators use only Python standard library
+# External dependencies
+tldextract>=5.1.2
 
 # Development dependencies (for testing and linting)
 # pytest>=7.0.0

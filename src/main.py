@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from generators.brute_generator import BruteForceGenerator
 from generators.word_transform_generator import WordTransformGenerator
+from cleanup import clean_file, remove_domains
 
 
 def create_parser():
@@ -47,6 +48,45 @@ Examples:
     )
 
     subparsers = parser.add_subparsers(dest='generator', help='Generator type')
+
+    # Cleanup utility
+    cleanup_parser = subparsers.add_parser('cleanup', help='Clean and normalize a domain list')
+    cleanup_parser.add_argument(
+        '--input', '-i',
+        required=True,
+        help='Input file path (one domain per line)'
+    )
+    cleanup_parser.add_argument(
+        '--output', '-o',
+        help='Output file path (default: assets/output/cleanup_<input>.txt)'
+    )
+    cleanup_parser.add_argument(
+        '--errors', '-e',
+        help='Error log file path (default: alongside output)'
+    )
+    cleanup_parser.add_argument(
+        '--tld',
+        default='lt',
+        help='Target TLD to enforce (default: lt)'
+    )
+    cleanup_parser.add_argument(
+        '--allow-subdomains',
+        action='store_true',
+        help='Allow subdomains for non-governmental domains'
+    )
+    cleanup_parser.add_argument(
+        '--allow-other-tlds',
+        action='store_true',
+        help='Accept any TLD instead of enforcing --tld only'
+    )
+    cleanup_parser.add_argument(
+        '--removees', '-r',
+        help='Optional file of domains to remove from the cleaned output'
+    )
+    cleanup_parser.add_argument(
+        '--remove-output',
+        help='Output file path after removal (default: <output> minus <removees>)'
+    )
 
     # Brute force generator
     brute_parser = subparsers.add_parser('brute', help='Brute force domain generation')
@@ -125,7 +165,7 @@ def generate_brute_force(args):
             print("Error: Cannot specify both --length and --min/--max", file=sys.stderr)
             return 1
         args.min = args.max = args.length
-    
+
     try:
         generator = BruteForceGenerator(
             char_type=args.charset,
@@ -177,6 +217,9 @@ def generate_word_transform(args):
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
+    # Clean and validate with shared rules before persisting
+    # (process_domain inside generator enforces the same rules line-by-line)
+
     # Estimate count
     estimated = generator.estimate_count()
     print(f"Estimated domains to generate: {estimated:,}")
@@ -206,6 +249,44 @@ def generate_word_transform(args):
         return 1
 
 
+def run_cleanup(args):
+    """Handle standalone cleanup of domain lists."""
+    input_path = Path(args.input)
+    output_path = Path(args.output) if args.output else Path(f"assets/output/cleanup_{input_path.stem}.txt")
+    errors_path = Path(args.errors) if args.errors else output_path.with_suffix('.errors.txt')
+
+    try:
+        result = clean_file(
+            input_path,
+            output_path,
+            errors_path,
+            target_tld=args.tld,
+            allow_other_tlds=args.allow_other_tlds,
+            allow_subdomains=args.allow_subdomains,
+        )
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    print(f"Cleaned {result.cleaned_count} unique domains to {output_path}")
+    print(f"Processed {result.processed_count} non-empty lines")
+    if result.skipped_count:
+        print(f"Skipped {result.skipped_count} lines; see {result.errors_path} for details")
+    if args.removees:
+        try:
+            remove_result = remove_domains(
+                output_path,
+                Path(args.removees),
+                Path(args.remove_output) if args.remove_output else None,
+            )
+        except FileNotFoundError as e:
+            print(f"Error during removal: {e}", file=sys.stderr)
+            return 1
+        print(f"Removed {remove_result.removed_count} domains using {args.removees}")
+        print(f"Kept {remove_result.kept_count} domains -> {remove_result.output_path}")
+    return 0
+
+
 def main():
     """Main entry point."""
     parser = create_parser()
@@ -219,6 +300,8 @@ def main():
         return generate_brute_force(args)
     elif args.generator == 'word_transform':
         return generate_word_transform(args)
+    elif args.generator == 'cleanup':
+        return run_cleanup(args)
     else:
         print(f"Generator '{args.generator}' not implemented yet", file=sys.stderr)
         return 1

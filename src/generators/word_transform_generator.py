@@ -1,6 +1,8 @@
 import re
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator
+
+from cleanup import process_domain
 
 
 class WordTransformGenerator:
@@ -73,41 +75,6 @@ class WordTransformGenerator:
         # Form domain
         return f"{cleaned}.{self.tld}"
 
-    def validate_domain(self, domain: str) -> bool:
-        """
-        Validate domain against DNS naming rules.
-
-        Args:
-            domain: Full domain name (with TLD)
-
-        Returns:
-            True if domain is valid, False otherwise
-        """
-        # Split domain and TLD
-        parts = domain.split('.')
-        if len(parts) != 2:
-            return False
-
-        label = parts[0]
-
-        # Length check (1-63 for label)
-        if len(label) < 1 or len(label) > 63:
-            return False
-
-        # Cannot start or end with hyphen
-        if label.startswith('-') or label.endswith('-'):
-            return False
-
-        # Cannot have consecutive hyphens
-        if '--' in label:
-            return False
-
-        # Must contain at least one alphanumeric character
-        if not any(c.isalnum() for c in label):
-            return False
-
-        return True
-
     def estimate_count(self) -> int:
         """
         Estimate total number of valid domains that will be generated.
@@ -134,8 +101,14 @@ class WordTransformGenerator:
                     word = line.strip()
                     if word:  # Skip empty lines
                         domain = self.transform_word(word)
-                        if self.validate_domain(domain):
-                            yield domain
+                        cleaned, reason = process_domain(
+                            domain,
+                            target_tld=self.tld,
+                            allow_other_tlds=True,
+                            allow_subdomains=False,
+                        )
+                        if cleaned:
+                            yield cleaned
         except Exception as e:
             raise RuntimeError(f"Error reading input file: {e}")
 
