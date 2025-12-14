@@ -1,6 +1,7 @@
 # .lt domain generator
 
-A simple toolkit for generating domain name lists using brute-force and word-transformation strategies.
+Ideas → Possible/legal domains
+List of domains → cleaned/deduped lists
 
 ## Features
 
