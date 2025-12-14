@@ -1,7 +1,7 @@
 # .lt domain generator
 
-Ideas → Possible/legal domains
-List of domains → cleaned/deduped lists
+- Ideas → Possible/legal domains;
+- List of domains → cleaned/deduped lists.
 
 ## Features
 
