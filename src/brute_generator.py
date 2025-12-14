@@ -2,7 +2,7 @@ import itertools
 from typing import Generator, Optional
 from pathlib import Path
 
-from utils.io_utils import write_batches
+from io_utils import write_batches
 
 
 class BruteForceGenerator:

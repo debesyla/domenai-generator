@@ -9,43 +9,17 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-from generators.brute_generator import BruteForceGenerator
-from generators.word_transform_generator import WordTransformGenerator
+from brute_generator import BruteForceGenerator
+from word_transform_generator import WordTransformGenerator
 from cleanup import clean_file, remove_domains
-from utils.io_utils import make_output_path
+from io_utils import make_output_path
 
 
 def create_parser():
     """Create the argument parser."""
     parser = argparse.ArgumentParser(
         description="Generate domain name lists using various algorithms",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Generate 2-4 character domains with default settings
-  python main.py brute
-
-  # Transform words from file to .lt domains
-  python main.py word_transform --input assets/input/words.txt
-
-  # Transform words to .com domains with custom output
-  python main.py word_transform --input words.txt --tld com --output domains.txt
-
-  # Generate 3-character domains only
-  python main.py brute --length 3
-
-  # Generate 3-5 character alphanumeric domains with hyphens
-  python main.py brute --min 3 --max 5 --charset alphanumeric --hyphen-mode with
-
-  # Generate only domains that contain hyphens
-  python main.py brute --hyphen-mode only --output hyphen_domains.txt
-
-  # Generate numeric domains only
-  python main.py brute --charset numbers --min 1 --max 3
-        """
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     subparsers = parser.add_subparsers(dest='generator', help='Generator type')

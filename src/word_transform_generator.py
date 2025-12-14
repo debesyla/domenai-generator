@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Generator
 
 from cleanup import process_domain
-from utils.io_utils import write_batches
+from io_utils import write_batches
 
 
 class WordTransformGenerator:

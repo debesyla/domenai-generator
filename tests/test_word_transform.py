@@ -2,7 +2,7 @@ import unittest
 import tempfile
 import os
 from pathlib import Path
-from src.generators.word_transform_generator import WordTransformGenerator
+from src.word_transform_generator import WordTransformGenerator
 
 
 class TestWordTransformGenerator(unittest.TestCase):

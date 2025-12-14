@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 import os
-from src.generators.brute_generator import BruteForceGenerator
+from src.brute_generator import BruteForceGenerator
 
 
 class TestBruteForceGenerator(unittest.TestCase):
