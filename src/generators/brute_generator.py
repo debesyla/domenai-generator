@@ -159,4 +159,10 @@ class BruteForceGenerator:
         Returns:
             Total number of domains written
         """
-        return write_batches(self.generate(), filepath, batch_size=batch_size)
+        estimated = self.estimate_count()
+        return write_batches(
+            self.generate(),
+            filepath,
+            batch_size=batch_size,
+            progress_total=estimated if estimated > 0 else None,
+        )

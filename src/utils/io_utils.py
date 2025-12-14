@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 
 
 def make_output_path(prefix: str, **params) -> str:
@@ -18,7 +18,14 @@ def make_output_path(prefix: str, **params) -> str:
     return str(Path('assets') / 'output' / filename)
 
 
-def write_batches(iterable: Iterable[str], filepath: str, batch_size: int = 10000) -> int:
+def write_batches(
+    iterable: Iterable[str],
+    filepath: str,
+    batch_size: int = 10000,
+    *,
+    progress_total: Optional[int] = None,
+    progress_every: int = 100000,
+) -> int:
     """
     Write items from an iterable to a file in batches (one per line).
 
@@ -43,8 +50,16 @@ def write_batches(iterable: Iterable[str], filepath: str, batch_size: int = 1000
             if len(batch) >= batch_size:
                 f.write('\n'.join(batch) + '\n')
                 batch = []
+                if progress_total:
+                    # Basic progress report without external dependencies
+                    if count % progress_every == 0:
+                        pct = (count / progress_total) * 100 if progress_total else 0
+                        print(f"Progress: {count:,}/{progress_total:,} ({pct:0.2f}%)")
 
         if batch:
             f.write('\n'.join(batch) + '\n')
+            if progress_total:
+                pct = (count / progress_total) * 100 if progress_total else 0
+                print(f"Progress: {count:,}/{progress_total:,} ({pct:0.2f}%)")
 
     return count
