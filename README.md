@@ -2,17 +2,17 @@
 
 A simple toolkit for generating domain name lists using brute-force and word-transformation strategies.
 
-## 🚀 Features
+## Features
 
 - **Brute Force Generator**: Exhaustive combinations of characters within specified lengths.
 - **Word Transform Generator**: Transform words from a file into domains (e.g., normalizing Lithuanian characters).
 - **Cleanup Utility**: Tools to clean, validate, and filter domain lists.
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.8+
 
-## 🛠️ Installation
+## Installation
 
 1. Clone the repository:
 ```bash
@@ -25,7 +25,7 @@ cd dago-domenai-generator
 pip install -r requirements.txt
 ```
 
-## 📖 Usage
+## Usage
 
 ### Brute Force Generator
 
@@ -59,7 +59,7 @@ python src/main.py cleanup \
   --output assets/output/clean_domains.txt
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 dago-domenai-generator/
@@ -76,3 +76,7 @@ dago-domenai-generator/
 │   └── io_utils.py
 └── tests/
 ```
+
+## AI notice
+
+LLM engines were used to generate, edit parts of the code. Most of it, actually. So keep that in mind and so you are free to do anything with this tool. Have fun!
