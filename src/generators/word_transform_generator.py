@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Generator
 
 from cleanup import process_domain
+from utils.io_utils import write_batches
 
 
 class WordTransformGenerator:
@@ -123,23 +124,4 @@ class WordTransformGenerator:
         Returns:
             Total number of domains written
         """
-        count = 0
-        batch = []
-
-        output_path = Path(filepath)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(filepath, 'w', encoding='utf-8') as f:
-            for domain in self.generate():
-                batch.append(domain)
-                count += 1
-
-                if len(batch) >= batch_size:
-                    f.write('\n'.join(batch) + '\n')
-                    batch = []
-
-            # Write remaining batch
-            if batch:
-                f.write('\n'.join(batch) + '\n')
-
-        return count
+        return write_batches(self.generate(), filepath, batch_size=batch_size)
