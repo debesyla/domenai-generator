@@ -96,20 +96,24 @@ class WordTransformGenerator:
         Yields:
             Valid domain names with TLD
         """
+        # Ensure uniqueness while preserving input order
+        seen = set()
         try:
             with open(self.input_file, 'r', encoding='utf-8') as f:
                 for line in f:
                     word = line.strip()
-                    if word:  # Skip empty lines
-                        domain = self.transform_word(word)
-                        cleaned, reason = process_domain(
-                            domain,
-                            target_tld=self.tld,
-                            allow_other_tlds=True,
-                            allow_subdomains=False,
-                        )
-                        if cleaned:
-                            yield cleaned
+                    if not word:
+                        continue
+                    domain = self.transform_word(word)
+                    cleaned, reason = process_domain(
+                        domain,
+                        target_tld=self.tld,
+                        allow_other_tlds=True,
+                        allow_subdomains=False,
+                    )
+                    if cleaned and cleaned not in seen:
+                        seen.add(cleaned)
+                        yield cleaned
         except Exception as e:
             raise RuntimeError(f"Error reading input file: {e}")
 
