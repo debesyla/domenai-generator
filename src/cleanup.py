@@ -29,9 +29,11 @@ class RemoveResult:
 
 def is_valid_domain_length(domain: str) -> Tuple[bool, Optional[str]]:
     labels = domain.split(".")
-    for label in labels:
-        if len(label) == 1:
-            return False, "single character label"
+    # Validate only domain labels (exclude TLD - the last label)
+    domain_labels = labels[:-1] if len(labels) > 1 else labels
+    for label in domain_labels:
+        if len(label) < 3:
+            return False, "domain label too short (min 3 chars)"
         if len(label) > 63:
             return False, "label exceeds 63 characters"
     return True, None
