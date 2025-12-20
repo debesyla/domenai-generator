@@ -46,7 +46,9 @@ def is_valid_hyphen_rules(domain: str) -> Tuple[bool, Optional[str]]:
             return False, "hyphen at start of label"
         if label.endswith("-"):
             return False, "hyphen at end of label"
-        if "--" in label:
+        # Allow the punycode IDN prefix "xn--" which contains consecutive hyphens
+        # while still rejecting other consecutive hyphen sequences.
+        if "--" in label and not label.startswith("xn--"):
             return False, "consecutive hyphens"
     return True, None
 
