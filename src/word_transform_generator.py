@@ -12,10 +12,42 @@ class WordTransformGenerator:
     by cleaning, normalizing, and appending TLDs.
     """
 
-    # Lithuanian characters to Latin mapping
-    LITHUANIAN_TO_LATIN = {
+    # Diacritical marks to Latin mapping (European languages)
+    DIACRITICS_TO_LATIN = {
+        # Lithuanian
         'ą': 'a', 'č': 'c', 'ę': 'e', 'ė': 'e', 'į': 'i', 'š': 's', 'ų': 'u', 'ū': 'u', 'ž': 'z',
         'Ą': 'A', 'Č': 'C', 'Ę': 'E', 'Ė': 'E', 'Į': 'I', 'Š': 'S', 'Ų': 'U', 'Ū': 'U', 'Ž': 'Z',
+        # German/Nordic
+        'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss',
+        'Ä': 'A', 'Ö': 'O', 'Ü': 'U',
+        'å': 'a', 'Å': 'A',
+        # French
+        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+        'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+        'à': 'a', 'â': 'a', 'ã': 'a',
+        'À': 'A', 'Â': 'A', 'Ã': 'A',
+        'ô': 'o', 'õ': 'o',
+        'Ô': 'O', 'Õ': 'O',
+        'ù': 'u', 'û': 'u',
+        'Ù': 'U', 'Û': 'U',
+        'ç': 'c', 'Ç': 'C',
+        # Spanish/Portuguese
+        'á': 'a', 'ñ': 'n', 'Á': 'A', 'Ñ': 'N', 'ó': 'o', 'Ó': 'O',
+        # Polish
+        'ł': 'l', 'ć': 'c', 'ń': 'n', 'ś': 's', 'ź': 'z', 'ż': 'z',
+        'Ł': 'L', 'Ć': 'C', 'Ń': 'N', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z',
+        # Czech/Slovak
+        'ď': 'd', 'ě': 'e', 'ň': 'n', 'ř': 'r', 'ů': 'u',
+        'Ď': 'D', 'Ě': 'E', 'Ň': 'N', 'Ř': 'R', 'Ů': 'U',
+        # Romanian
+        'ă': 'a', 'î': 'i', 'ţ': 't',
+        'Ă': 'A', 'Î': 'I', 'Ţ': 'T',
+        # Hungarian
+        'ő': 'o', 'ű': 'u',
+        'Ő': 'O', 'Ű': 'U',
+        # Other common (Turkish, etc.)
+        'ı': 'i', 'ğ': 'g', 'ş': 's', 'ú': 'u', 'ý': 'y',
+        'Ğ': 'G', 'Ş': 'S', 'Ú': 'U', 'Ý': 'Y',
     }
 
     def __init__(self, input_file: str, tld: str = 'lt'):
@@ -45,9 +77,9 @@ class WordTransformGenerator:
         # Remove all non-alphanumeric except hyphens
         return re.sub(r'[^a-zA-Z0-9-]', '', word)
 
-    def normalize_lithuanian_chars(self, text: str) -> str:
+    def normalize_diacritics(self, text: str) -> str:
         """
-        Convert Lithuanian characters to their Latin equivalents.
+        Convert diacritical marks to their Latin equivalents.
 
         Args:
             text: Text to normalize
@@ -55,7 +87,7 @@ class WordTransformGenerator:
         Returns:
             Normalized text
         """
-        return ''.join(self.LITHUANIAN_TO_LATIN.get(char, char) for char in text)
+        return ''.join(self.DIACRITICS_TO_LATIN.get(char, char) for char in text)
 
     def transform_word(self, word: str) -> str:
         """
@@ -69,8 +101,8 @@ class WordTransformGenerator:
         """
         # Convert to lowercase first
         lowercased = word.lower()
-        # Normalize Lithuanian characters
-        normalized = self.normalize_lithuanian_chars(lowercased)
+        # Normalize diacritical marks
+        normalized = self.normalize_diacritics(lowercased)
         # Clean non-alphanumeric except hyphens (after normalization)
         cleaned = self.clean_word(normalized)
         # Form domain
