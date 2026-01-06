@@ -36,6 +36,15 @@ def is_valid_domain_length(domain: str) -> Tuple[bool, Optional[str]]:
             return False, "domain label too short (min 3 chars)"
         if len(label) > 63:
             return False, "label exceeds 63 characters"
+
+        # ========== TEMPORARY LENGTH FILTER ==========
+        # FIXME: Remove this once domain availability checking supports longer domains
+        # Current limit: 43 characters (domain label only, excluding TLD)
+        # Reason: Existing .lt domains are currently max 43 chars
+        if len(label) > 43:
+            return False, "domain label exceeds 43 characters (temporary limit)"
+        # =============================================
+
     return True, None
 
 
