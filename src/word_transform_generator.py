@@ -50,7 +50,7 @@ class WordTransformGenerator:
         'Ğ': 'G', 'Ş': 'S', 'Ú': 'U', 'Ý': 'Y',
     }
 
-    def __init__(self, input_file: str, tld: str = 'lt'):
+    def __init__(self, input_file: str = None, tld: str = 'lt'):
         """
         Initialize the word transform generator.
 
@@ -58,6 +58,8 @@ class WordTransformGenerator:
             input_file: Path to input text file (one word per line)
             tld: Top-level domain to append (default: 'lt')
         """
+        if input_file is None:
+            input_file = 'assets/input/input.txt'  # Default input file
         self.input_file = Path(input_file)
         if not self.input_file.exists():
             raise FileNotFoundError(f"Input file not found: {input_file}")

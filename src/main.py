@@ -112,8 +112,8 @@ def create_parser():
     word_parser = subparsers.add_parser('word_transform', help='Transform words from file to domains')
     word_parser.add_argument(
         '--input', '-i',
-        required=True,
-        help='Input file path (one word per line)'
+        default='assets/input/input.txt',
+        help='Input file path (one word per line). Default: assets/input/input.txt'
     )
     word_parser.add_argument(
         '--output', '-o',
