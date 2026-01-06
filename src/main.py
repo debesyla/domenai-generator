@@ -125,6 +125,11 @@ def create_parser():
         help='Top-level domain to append (default: lt)'
     )
     word_parser.add_argument(
+        '--split-words', '-s',
+        action='store_true',
+        help='Split multi-word phrases into separate domains'
+    )
+    word_parser.add_argument(
         '--estimate-only', '-e',
         action='store_true',
         help='Only estimate count, do not generate'
@@ -240,7 +245,8 @@ def generate_word_transform(args):
     try:
         generator = WordTransformGenerator(
             input_file=args.input,
-            tld=args.tld
+            tld=args.tld,
+            split_words=args.split_words
         )
     except (FileNotFoundError, ValueError) as e:
         print(f"Error: {e}", file=sys.stderr)

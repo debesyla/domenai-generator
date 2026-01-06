@@ -50,13 +50,16 @@ class WordTransformGenerator:
         'Ğ': 'G', 'Ş': 'S', 'Ú': 'U', 'Ý': 'Y',
     }
 
-    def __init__(self, input_file: str = None, tld: str = 'lt'):
+    def __init__(self, input_file: str = None, tld: str = 'lt', split_words: bool = False):
         """
         Initialize the word transform generator.
 
         Args:
             input_file: Path to input text file (one word per line)
             tld: Top-level domain to append (default: 'lt')
+            split_words: If True, split multi-word phrases into separate domains.
+                         E.g., "pvz tekstas" -> ["pvz.lt", "tekstas.lt"]
+                         If False, combine into single domain (default behavior)
         """
         if input_file is None:
             input_file = 'assets/input/input.txt'  # Default input file
@@ -65,6 +68,7 @@ class WordTransformGenerator:
             raise FileNotFoundError(f"Input file not found: {input_file}")
 
         self.tld = tld.lstrip('.')  # Remove leading dot if present
+        self.split_words = split_words
 
     def clean_word(self, word: str) -> str:
         """
@@ -115,11 +119,30 @@ class WordTransformGenerator:
         Estimate total number of valid domains that will be generated.
 
         Returns:
-            Estimated count based on input file line count
+            Estimated count based on input file line count (or word count if split_words=True)
         """
         try:
             with open(self.input_file, 'r', encoding='utf-8') as f:
-                return sum(1 for line in f if line.strip())
+                if self.split_words:
+                    # Rough estimate: count words across all lines
+                    total = 0
+                    for line in f:
+                        text = line.strip()
+                        if text:
+                            # Remove ignored chars and split
+                            text = re.sub(r'[.()]', '', text)
+                            words = re.split(r'[\s,;:–—―]+', text)
+                            for word in words:
+                                if word:
+                                    # Count hyphen variants: with, without, split parts
+                                    hyphen_parts = word.split('-')
+                                    if len(hyphen_parts) > 1:
+                                        total += 2 + len(hyphen_parts)  # with-hyphen, without, each part
+                                    else:
+                                        total += 1
+                    return total
+                else:
+                    return sum(1 for line in f if line.strip())
         except Exception:
             return 0
 
@@ -135,19 +158,50 @@ class WordTransformGenerator:
         try:
             with open(self.input_file, 'r', encoding='utf-8') as f:
                 for line in f:
-                    word = line.strip()
-                    if not word:
+                    text = line.strip()
+                    if not text:
                         continue
-                    domain = self.transform_word(word)
-                    cleaned, reason = process_domain(
-                        domain,
-                        target_tld=self.tld,
-                        allow_other_tlds=True,
-                        allow_subdomains=False,
-                    )
-                    if cleaned and cleaned not in seen:
-                        seen.add(cleaned)
-                        yield cleaned
+
+                    # Split into individual words if split_words is enabled
+                    if self.split_words:
+                        # Strip periods and parentheses first (more efficient than chained replace)
+                        text = re.sub(r'[.()]', '', text)
+                        # Split on: spaces, commas, semicolons, colons, and various dashes (NOT regular hyphen)
+                        # Includes: en dash (–), em dash (—), horizontal bar (―)
+                        words = re.split(r'[\s,;:–—―]+', text)
+                    else:
+                        # Treat entire line as single word (remove spaces)
+                        words = [text.replace(' ', '')]
+
+                    # Process each word
+                    for word in words:
+                        if not word:
+                            continue
+
+                        # Generate hyphen variants if word contains hyphens (and split_words=True)
+                        if self.split_words and '-' in word:
+                            variants = []
+                            # Variant 1: Keep hyphens
+                            variants.append(word)
+                            # Variant 2: Strip hyphens (concatenate)
+                            variants.append(word.replace('-', ''))
+                            # Variant 3: Split on hyphens (each part as separate domain)
+                            hyphen_parts = [part for part in word.split('-') if part]
+                            variants.extend(hyphen_parts)
+                        else:
+                            variants = [word]
+
+                        for variant in variants:
+                            domain = self.transform_word(variant)
+                            cleaned, reason = process_domain(
+                                domain,
+                                target_tld=self.tld,
+                                allow_other_tlds=True,
+                                allow_subdomains=False,
+                            )
+                            if cleaned and cleaned not in seen:
+                                seen.add(cleaned)
+                                yield cleaned
         except Exception as e:
             raise RuntimeError(f"Error reading input file: {e}")
 
