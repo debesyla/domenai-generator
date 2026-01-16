@@ -29,8 +29,7 @@ def create_parser():
     cleanup_parser = subparsers.add_parser('cleanup', help='Clean and normalize a domain list')
     cleanup_parser.add_argument(
         '--input', '-i',
-        required=True,
-        help='Input file path (one domain per line)'
+        help='Input file path (one domain per line, default: assets/input/input.txt)'
     )
     cleanup_parser.add_argument(
         '--output', '-o',
@@ -286,7 +285,7 @@ def generate_word_transform(args):
 
 def run_cleanup(args):
     """Handle standalone cleanup of domain lists."""
-    input_path = Path(args.input)
+    input_path = Path(args.input) if args.input else Path("assets/input/input.txt")
     output_path = Path(args.output) if args.output else Path(f"assets/output/cleanup_{input_path.stem}.txt")
     errors_path = Path(args.errors) if args.errors else output_path.with_suffix('.errors.txt')
 

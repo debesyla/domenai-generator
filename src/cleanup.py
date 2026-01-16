@@ -32,8 +32,8 @@ def is_valid_domain_length(domain: str) -> Tuple[bool, Optional[str]]:
     # Validate only domain labels (exclude TLD - the last label)
     domain_labels = labels[:-1] if len(labels) > 1 else labels
     for label in domain_labels:
-        if len(label) < 3:
-            return False, "domain label too short (min 3 chars)"
+        if len(label) < 2:
+            return False, "domain label too short (min 2 chars)"
         if len(label) > 63:
             return False, "label exceeds 63 characters"
 
@@ -41,8 +41,8 @@ def is_valid_domain_length(domain: str) -> Tuple[bool, Optional[str]]:
         # FIXME: Remove this once domain availability checking supports longer domains
         # Current limit: 43 characters (domain label only, excluding TLD)
         # Reason: Existing .lt domains are currently max 43 chars
-        if len(label) > 43:
-            return False, "domain label exceeds 43 characters (temporary limit)"
+        if len(label) > 43 or len(label) < 5:
+            return False, "domain label length outside temporary limits (5-43 chars)"
         # =============================================
 
     return True, None
@@ -136,7 +136,7 @@ def process_domain(
 
 
 def clean_file(
-    input_path: Path | str,
+    input_path: Optional[Path | str] = None,
     output_path: Optional[Path | str] = None,
     errors_path: Optional[Path | str] = None,
     *,
@@ -145,7 +145,7 @@ def clean_file(
     allow_subdomains: bool = False,
     progress_every: int = 1000,
 ) -> CleanupResult:
-    input_file = Path(input_path)
+    input_file = Path(input_path) if input_path else Path("assets/input/input.txt")
     if not input_file.exists():
         raise FileNotFoundError(f"Input file not found: {input_file}")
 
